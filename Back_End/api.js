@@ -1,10 +1,28 @@
+const marketApi = new Map();
+const marketSettings = require('./config/marketSettings.json');
+const markets = marketSettings.markets;
+const marketModulesPath = './Market';
+
+markets.forEach((market) => {
+    marketApi.set(market, require(`${marketModulesPath}/${market}/index.js`))
+})
+
 const express = require('express');
 const app = express();
-const port = 3000
+const port = 3000;
 
-app.get('/', (req, res) => {
+app.get('/:query', async (req, res) => {
+    let query = req.params.query;
+
+    marketDataArr = []
+
+    for (const [key, module] of marketApi.entries()) {
+        let marketData = await module.search(query);
+        marketDataArr.push(marketData);
+    }
+
     res.json({
-        user: 'tj'
+        data: marketDataArr
     });
 })
 
