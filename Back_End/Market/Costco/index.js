@@ -27,7 +27,7 @@ async function getResults(query) {
 
         let name = elementCheerio('.description').text().trim();
         let link = elementCheerio('.description > a').attr('href').trim();
-        let price = elementCheerio('.price').text().trim();
+        let price = elementCheerio('.price').text().trim().substr(1);
 
         items.push(new Item(name, price, link))
     });
