@@ -4,7 +4,7 @@ const Item = require('../../model/Item');
 const Market = require('../../model/Market');
 
 function getSearchItemUrl(query) {
-    return `https://www.costco.com/CatalogSearch?keyword=chocolate&dept=All`;
+    return `https://www.costco.com/CatalogSearch?keyword=${query}&dept=All`;
 }
 
 async function fetch(link) {
@@ -39,14 +39,9 @@ module.exports = {
     search: async function(query){
         try {
             let items = await getResults(query)
-            console.log('test')
             return new Market('Costco', 'www.costco.com', items)
         } catch (e) {
-            // return {
-            //     "message": "internal server error",
-            //     "error": e
-            // }
-            return {}
+            return new Market('Costco', 'www.costco.com', [])
         }
     }
 }
