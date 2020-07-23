@@ -4,19 +4,27 @@ import axios from 'axios';
 class Item extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {item: ''}
+    this.state = {item: null}
   }
 
   render() {
+    const list = this.state.item;
+    const listItems = list.map((listdata) =>
+      <li>
+        <p>Item: {listdata[0]}</p>
+        <p>Price: ${listdata[1]}</p>
+        <p>Link: {listdata[2]}</p>
+      </li>
+    );
     return (
-      <li></li>
+      <ul>{listItems}</ul>
     );
   }
 }
 
 function showResult(json_data) {
   return (
-    <Item />
+    <Item item={json_data}/>
   )
 }
 
@@ -27,7 +35,11 @@ function cmp(a, b) {
 class Searchbar extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {value: ''};
+    this.state = {
+      value: '', 
+      data_: null,
+      state: false
+    };
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -37,54 +49,65 @@ class Searchbar extends React.Component {
     this.setState({value: event.target.value});
   }
 
-  handleSubmit(event) {
-    /* Write Code for HTTP request here */
-    let data_ = null;
-    axios.get('http://localhost:3000/' + this.state.value).then(
-      function(response) {
-        data_ = response.data;
+  async getData() {
+    return await axios.get('http://localhost:3000/' + this.state.value).then(
+      response => {
+        this.setState({data_ : response.data});
+        this.setState({state: true})
+      })
+      .catch(error => {
+        console.log(error);
+      })
+  }
+
+  async handleSubmit(event) {
+    let data_ = await this.getData()
+    while (true) {
+      if (data_) {
+        var list = [];
+        console.log(data_);
+        for(var i = 0; i < data_.length; i++) {
+          var store = data_[i];
+          for (var k = 0; k < store.items.length; k++) {
+            var val = store.items[k];
+            list.push([val.name, val.price, val.link]);
+          }
+        }
+        list.sort(cmp);
+
+        /* Sort Top 10 */
+        let len = list.length;
+        if (len > 10) {
+          len = 10;
+        }
+
+        var newList = [];
+        for(var i = 0; i < len; i++) {
+          newList.push(list[i]);
+        }
+
+        console.log(newList);
+        this.setState({data_ : newList});
+        break;
       }
-    ) 
-    console.log('reached')
-    /* Parse Json */
-    /* data_[0] = costco */
-    /* data_[1] = walmart */
-    for(var i = 0; i < data_.length; i++) {
-      var store = data_[i];
-      var list = [];
-      for (var k = 0; k < store.items.length; k++) {
-        var val = store.items[k];
-        list.push([val.name, val.price, val.link]);
-      }
     }
-    list.sort(cmp);
-
-    /* Sort Top 10 */
-    let len = list.length;
-    if (len > 10) {
-      len = 10;
-    }
-
-    data_ = [];
-    for(var i = 0; i < len; i++) {
-      data_.push(list[i]);
-    }
-
-    console.log(data_);
-
-    /* Output List */
-    // return showResult(data_);
   }
 
   render() {
-    return (
-      <form>
-        <label>
-           <input type="text" name="searchbar" onChange={this.handleChange}/>
-        </label>
-        <button onClick={() => this.handleSubmit()}>Search</button>
-      </form>
-    );
+    if (this.state.state === false) {
+      return (
+        <form>
+          <label>
+            <input type="text" name="searchbar" onChange={this.handleChange}/>
+          </label>
+          <button onClick={() => this.handleSubmit()}>Search</button>
+        </form>
+      );
+    } else {
+      return (
+        showResult(this.state.data_)
+      );
+    }
   }
 }
 

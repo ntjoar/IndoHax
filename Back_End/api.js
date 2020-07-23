@@ -9,7 +9,10 @@ markets.forEach((market) => {
 
 const express = require('express');
 const app = express();
+var cors = require('cors')
 const port = 3000;
+
+app.use(cors())
 
 app.get('/:query', async (req, res) => {
     let query = req.params.query;
